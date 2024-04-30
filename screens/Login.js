@@ -8,12 +8,11 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   useEffect(()=>{
-   const unsubscribe = auth.onAuthStateChanged((user)=>{
+   const unsubscribe =auth.onAuthStateChanged((user)=>{
     if (user){
         navigation.navigate("home");
     }
    });
-   return unsubscribe;
   },[]);
 
   const signIn = () => {

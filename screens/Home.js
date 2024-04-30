@@ -7,69 +7,28 @@ import * as SQLite from 'expo-sqlite';
 import { getAuth, signOut } from 'firebase/auth';
 
 const Home = () => {
+  
   const [db, setDb] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
-
   useEffect(() => {
-    const database = SQLite.openDatabase('expenseTracker.db');
-    setDb(database);
-    
-    const user = auth.currentUser;
-    if (user) {
-      setEmail(user.email);
-      setPassword(user.password);
-    }
-
-    database.transaction(tx => {
-      tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL)'
-      );
-      tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, amount REAL NOT NULL, description TEXT, added_month TEXT NOT NULL, category_id INTEGER NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY (category_id) REFERENCES categories(id), FOREIGN KEY (user_id) REFERENCES users(id))'
-      );
-      tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS bills (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL, deadline TEXT NOT NULL, amount REAL NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))'
-      );
-      tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)'
-      );
-    });
-
-    if (db) {
-      db.transaction(
-        tx => {
-          tx.executeSql(
-            `INSERT INTO users (email, password) VALUES (?, ?);`,
-            [email, password],
-            (_, { rowsAffected }) => {
-              if (rowsAffected > 0) {
-                Alert.alert('Welcome');
-                setEmail('');
-                setPassword('');
-                navigation.navigate('login');
-              } else {
-                Alert.alert('Error', 'Failed');
-              }
-            },
-            (_, error) => {
-              console.log(error);
-              if (error.code === 'SQLITE_CONSTRAINT') {
-                Alert.alert('Error', 'Email already exists');
-              } else {
-                Alert.alert('Error', 'Failed to add user');
-              }
-            }
-          );
-        },
-        error => {
-          console.log('Transaction error:', error);
-          Alert.alert('Error', 'Failed to add user');
+    const fetchUserData = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          setEmail(user.email);
+          setPassword(user.password);
         }
-      );
-    }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // Handle error (e.g., show error message)
+      }
+    };
+  
+    fetchUserData();
   }, []);
+  
 
   const handleAddExpense = () => {
     navigation.navigate('expense');
