@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { Picker } from '@react-native-picker/picker';
-
 import * as SQLite from 'expo-sqlite';
 import { auth } from '../index';
 
-const db = SQLite.openDatabase('expense.db');
-
 const Expense = () => {
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newBillName, setNewBillName] = useState('');
   const [newBillAmount, setNewBillAmount] = useState('');
@@ -18,6 +12,7 @@ const Expense = () => {
   const [expenseDate, setExpenseDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [email, setEmail] = useState('');
+  const db = SQLite.openDatabase('expense.db');
 
   useEffect(() => {
     // Fetch current user's information
@@ -64,39 +59,12 @@ const Expense = () => {
         (_, error) => console.error('Error creating expense table:', error)
       );
     });
-
-    fetchCategories(); // Fetch categories on component mount
   }, []);
-
-  const fetchCategories = () => {
-    db.transaction(tx => {
-      tx.executeSql(
-        `SELECT * FROM Categories;`,
-        [],
-        (_, { rows }) => {
-          const data = rows._array;
-          setCategories(data);
-          if (data.length > 0) {
-            setSelectedCategory(data[0].id.toString()); // Set the first category as selected by default
-          }
-        },
-        error => {
-          console.error('Error fetching categories:', error);
-        }
-      );
-    });
-  };
 
   const handleAddCategory = () => {
     // Validation for category name
     if (!newCategoryName.trim()) {
       Alert.alert('Error', 'Please enter category name');
-      return;
-    }
-
-    // Check if the category name already exists
-    if (categories.some(category => category.name === newCategoryName.trim())) {
-      Alert.alert('Error', 'Category name already exists');
       return;
     }
 
@@ -108,7 +76,6 @@ const Expense = () => {
         (_, { rowsAffected }) => {
           if (rowsAffected > 0) {
             Alert.alert('Success', 'Category added successfully');
-            fetchCategories(); // Re-fetch categories after adding a new one
             setNewCategoryName('');
           } else {
             Alert.alert('Error', 'Failed to add category');
@@ -159,8 +126,8 @@ const Expense = () => {
 
   const handleAddExpense = () => {
     // Validation for expense category
-    if (!selectedCategory) {
-      Alert.alert('Error', 'Please select a category');
+    if (!newCategoryName.trim()) {
+      Alert.alert('Error', 'Please enter category name');
       return;
     }
 
@@ -173,8 +140,8 @@ const Expense = () => {
     // Insert the new expense into the database
     db.transaction(tx => {
       tx.executeSql(
-        `INSERT INTO Expenses (category_id, user_id, amount, date, description) VALUES (?, ?, ?, ?, ?);`,
-        [selectedCategory, email, parseFloat(newBillAmount), expenseDate.toISOString(), expenseDescription.trim()],
+        `INSERT INTO Expenses (category_id, user_id, amount, date, description) VALUES ((SELECT id FROM Categories WHERE name = ?), ?, ?, ?, ?);`,
+        [newCategoryName.trim(), email, parseFloat(newBillAmount), expenseDate.toISOString(), expenseDescription.trim()],
         (_, { rowsAffected }) => {
           if (rowsAffected > 0) {
             Alert.alert('Success', 'Expense added successfully');
@@ -241,16 +208,12 @@ const Expense = () => {
       </View>
       <View style={styles.form}>
         <Text style={styles.sectionTitle}>Add Expense</Text>
-        <Picker
-          selectedValue={selectedCategory}
+        <TextInput
+          placeholder="Enter category name"
+          value={newCategoryName}
+          onChangeText={setNewCategoryName}
           style={styles.input}
-          onValueChange={(itemValue, itemIndex) => setSelectedCategory(itemValue)}
-        >
-          <Picker.Item label="Select Category" value="" />
-          {categories.map(category => (
-            <Picker.Item key={category.id} label={category.name} value={category.id.toString()} />
-          ))}
-        </Picker>
+        />
         <TextInput
           placeholder="Enter expense amount"
           value={newBillAmount}
