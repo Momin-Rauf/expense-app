@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { auth } from '../index';
-import * as SQLite from 'expo-sqlite';
-import { getAuth, signOut } from 'firebase/auth';
+import { Button, Text, Surface, Avatar } from 'react-native-paper';
+import { auth, signOut } from '../index'; // Assuming auth and signOut are exported from index.js
+import { getAuth } from 'firebase/auth';
 
 const Home = () => {
   
-  const [db, setDb] = useState(null);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const navigation = useNavigation();
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const user = auth.currentUser;
         if (user) {
           setEmail(user.email);
-          setPassword(user.password);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -28,7 +26,6 @@ const Home = () => {
   
     fetchUserData();
   }, []);
-  
 
   const handleAddExpense = () => {
     navigation.navigate('expense');
@@ -46,23 +43,23 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => console.log('Language changed')} style={styles.languageButton}>
-          <Ionicons name="language-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSignOut} style={[styles.button, styles.logout]}>
-          <Text style={styles.buttonText}>Log out</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.content}>
-        <Text style={[styles.button,styles.viewDashboardButton ]} >{email}</Text>
-        <TouchableOpacity onPress={handleAddExpense} style={[styles.button, styles.addExpenseButton]}>
-          <Text style={styles.buttonText}>Add Expense</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleViewDashboard} style={[styles.button, styles.viewDashboardButton]}>
-          <Text style={styles.buttonText}>View Dashboard</Text>
-        </TouchableOpacity>
-      </View>
+      <Surface style={styles.header}>
+        <Ionicons name="language-outline" size={24} color="#009E87" onPress={() => console.log('Language changed')} />
+        <Button icon="logout" onPress={handleSignOut} style={styles.logoutButton}>
+          Log out
+        </Button>
+      </Surface>
+      <Surface style={styles.content}>
+        <Avatar.Text size={80} label="U" style={styles.avatar} />
+        <Text style={styles.userInfo}>Logged in as:</Text>
+        <Text style={styles.userInfo}>{email}</Text>
+        <Button mode="contained" onPress={handleAddExpense} style={styles.button}>
+          Add Expense
+        </Button>
+        <Button mode="contained" onPress={handleViewDashboard} style={styles.button}>
+          View Dashboard
+        </Button>
+      </Surface>
     </View>
   );
 };
@@ -79,11 +76,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  languageButton: {
     padding: 10,
-    borderRadius: 50,
-    backgroundColor: '#fff',
+    borderRadius: 10,
+    backgroundColor: '#106458',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: '#106458',
+  },
+  logoutButton: {
+    borderRadius: 25,
   },
   button: {
     width: '100%',
@@ -93,25 +99,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  logout: {
-    width: '25%',
-    height: 40,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 10,
-    backgroundColor: '#fff',
-  },
-  addExpenseButton: {
-    backgroundColor: '#fff',
-  },
-  viewDashboardButton: {
-    backgroundColor: '#fff',
-  },
-  buttonText: {
+  userInfo: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#009E87',
+    marginBottom: 20,
+  },
+  avatar: {
+    backgroundColor: '#009E87',
+    marginBottom: 20,
   },
 });
 

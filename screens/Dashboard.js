@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
 import { Card, Text, Title, Provider as PaperProvider, Button, Modal, Portal } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
+import { PieChart } from 'react-native-chart-kit';
+
 
 const Dashboard = () => {
   const db = SQLite.openDatabase('tracker.db');
@@ -10,12 +12,25 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [expenses, setExpenses] = useState([]);
+  const [pieChartData, setPieChartData] = useState([]);
+
 
   useEffect(() => {
     fetchCategories();
     fetchTotalExpense();
+    fetchPieChartData(); // Add this line
   }, []);
-
+  
+  const fetchPieChartData = () => {
+    // Fetch data for the pie chart, for example:
+    const data = [
+      { name: 'Category 1', amount: 200 },
+      { name: 'Category 2', amount: 300 },
+      { name: 'Category 3', amount: 400 },
+    ];
+    setPieChartData(data);
+  };
+  
   const fetchCategories = () => {
     db.transaction(tx => {
       tx.executeSql(
@@ -89,6 +104,25 @@ const Dashboard = () => {
   return (
     <PaperProvider>
       <ScrollView contentContainerStyle={styles.container}>
+      <PieChart
+            data={categories.map(category => ({
+              name: category.name,
+              expense: category.totalExpense,
+              color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
+            }))}
+            width={300}
+            height={200}
+            chartConfig={{
+              backgroundColor: '#ffffff',
+              decimalPlaces: 2,
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            }}
+            accessor="expense"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
+
         <Title style={styles.title}>Categories</Title>
         <Text style={styles.totalExpenseText}>Total Expense: ${totalExpense}</Text>
         {categories.map(category => renderCategory(category))}

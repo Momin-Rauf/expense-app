@@ -17,9 +17,9 @@ function App() {
     <PaperProvider>
       <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen name="login" component={Login} />
         <Stack.Screen options={{headerShown: false}}  name="home" component={Home} />
         <Stack.Screen name="register" component={Register} />
-        <Stack.Screen name="login" component={Login} />
         <Stack.Screen name="dashboard" component={Dashboard} />
         <Stack.Screen name="expense" component={Expense} />
       </Stack.Navigator>
