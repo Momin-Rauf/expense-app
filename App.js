@@ -9,12 +9,13 @@ import Home from './screens/Home';
 import Register from './screens/Register';
 import Dashboard from './screens/Dashboard';
 import Expense from './screens/Expense';
-
+import { PaperProvider } from 'react-native-paper';
 const Stack = createNativeStackNavigator();
 
 function App() {
   return (
-    <NavigationContainer>
+    <PaperProvider>
+      <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen options={{headerShown: false}}  name="home" component={Home} />
         <Stack.Screen name="register" component={Register} />
@@ -23,6 +24,7 @@ function App() {
         <Stack.Screen name="expense" component={Expense} />
       </Stack.Navigator>
     </NavigationContainer>
+    </PaperProvider>
   );
 }
 
