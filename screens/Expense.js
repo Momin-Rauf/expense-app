@@ -9,7 +9,7 @@ import { auth } from '../index';
 
 
 const Expense = () => {
-  const db = SQLite.openDatabase('tracker.db');
+  const db = SQLite.openDatabase('Expensetracker.db');
   const [categories, setCategories] = useState([]);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [selectedBudgetCategory, setSelectedBudgetCategory] = useState('');

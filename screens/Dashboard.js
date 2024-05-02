@@ -3,56 +3,94 @@ import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
 import { Card, Text, Title, Provider as PaperProvider, Button, Modal, Portal } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
 import { PieChart } from 'react-native-chart-kit';
-
+import { auth } from '../index'; // Assuming auth and signOut are exported from index.js
+import { getAuth ,signOut} from 'firebase/auth';
 
 const Dashboard = () => {
-  const db = SQLite.openDatabase('tracker.db');
+  const db = SQLite.openDatabase('Expensetracker.db');
   const [categories, setCategories] = useState([]);
+  const [bills, setBills] = useState([]);
   const [totalExpense, setTotalExpense] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
+  const [email, setEmail] = useState('');
 
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          setEmail(user.email);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // Handle error (e.g., show error message)
+      }
+    };
+  
+    fetchUserData();
+    fetchBills();
     fetchCategories();
     fetchTotalExpense();
-    fetchPieChartData(); // Add this line
+     // Add this line
   }, []);
+
+  const renderBill = ({ item }) => (
+    <Card style={styles.billCard}>
+      <Card.Content>
+        <Text>Date: {item.date}</Text>
+        <Text>Amount: ${item.amount}</Text>
+        <Text>Description: {item.category}</Text>
+      </Card.Content>
+    </Card>
+  );
   
-  const fetchPieChartData = () => {
-    // Fetch data for the pie chart, for example:
-    const data = [
-      { name: 'Category 1', amount: 200 },
-      { name: 'Category 2', amount: 300 },
-      { name: 'Category 3', amount: 400 },
-    ];
-    setPieChartData(data);
+  const fetchBills = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT * FROM Bills WHERE user_id = ?;',
+        [email],
+        (_, { rows }) => {
+          setBills(rows._array);
+        },
+        (_, error) => console.error('Error fetching bills:', error)
+      );
+    });
   };
   
   const fetchCategories = () => {
     db.transaction(tx => {
       tx.executeSql(
         `SELECT Categories.*, 
-        (SELECT SUM(amount) FROM Expenses WHERE Expenses.category_id = Categories.id) as totalExpense,
-        (SELECT date FROM Expenses WHERE Expenses.category_id = Categories.id ORDER BY date DESC LIMIT 1) as lastExpenseDate
+        (SELECT SUM(amount) FROM Expenses 
+          WHERE Expenses.category_id = Categories.id 
+         
+        ) as totalExpense,
+        (SELECT date FROM Expenses 
+          WHERE Expenses.category_id = Categories.id 
+          AND Expenses.user_id = ?
+          ORDER BY date DESC LIMIT 1
+        ) as lastExpenseDate
         FROM Categories;`,
-        [],
+        [email],
         (_, { rows }) => {
           const data = rows._array;
           setCategories(data);
         },
-        error => console.error('Error fetching categories:', error)
+        (_, error) => console.error('Error fetching categories:', error)
       );
+      
     });
   };
 
   const fetchTotalExpense = () => {
     db.transaction(tx => {
       tx.executeSql(
-        'SELECT SUM(amount) as total FROM Expenses;',
-        [],
+        `SELECT SUM(amount) as total FROM Expenses WHERE user_id = ?;`,
+    [email],
         (_, { rows }) => {
           const { total } = rows._array[0];
           setTotalExpense(total || 0);
@@ -65,8 +103,8 @@ const Dashboard = () => {
   const fetchExpensesByCategory = (categoryId) => {
     db.transaction(tx => {
       tx.executeSql(
-        'SELECT * FROM Expenses WHERE category_id = ?;',
-        [categoryId],
+        'SELECT * FROM Expenses WHERE category_id = ? AND user_id = ?;',
+        [categoryId, email],
         (_, { rows }) => {
           setExpenses(rows._array);
         },
@@ -104,6 +142,8 @@ const Dashboard = () => {
   return (
     <PaperProvider>
       <ScrollView contentContainerStyle={styles.container}>
+      <Title style={styles.title}>{email}</Title>
+      <Title style={styles.title}>Data </Title>
       <PieChart
             data={categories.map(category => ({
               name: category.name,
@@ -127,6 +167,12 @@ const Dashboard = () => {
         <Text style={styles.totalExpenseText}>Total Expense: ${totalExpense}</Text>
         {categories.map(category => renderCategory(category))}
       </ScrollView>
+      <Title style={styles.title}>Bill Reminders</Title>
+      <FlatList
+        data={bills}
+        keyExtractor={item => item.id.toString()}
+        renderItem={renderBill}
+      />
       <Portal>
         <Modal visible={isModalVisible} onDismiss={() => setIsModalVisible(false)} contentContainerStyle={styles.modalContainer}>
           <Title>Expenses in {selectedCategory?.name}</Title>

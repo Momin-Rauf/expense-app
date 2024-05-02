@@ -52,11 +52,9 @@ const Login = ({ navigation }) => {
         <TouchableOpacity style={styles.signIn} onPress={signIn}>
           <Text  style={[styles.textSign, { color: 'white' }]}>Sign In</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('signup')}>
-          <Text  style={[styles.textSign, { color: 'white' }]}>Don't have an account? Sign Up</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={{ color: '#009387', marginTop: 15 }}>Forgot password?</Text>
+        
+        <TouchableOpacity onPress={() => navigation.navigate('register')} >
+          <Text style={{ color: '#009387', marginTop: 15 }}>Register</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -3,8 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Text, Surface, Avatar } from 'react-native-paper';
-import { auth, signOut } from '../index'; // Assuming auth and signOut are exported from index.js
-import { getAuth } from 'firebase/auth';
+import { auth } from '../index'; // Assuming auth and signOut are exported from index.js
+import { getAuth ,signOut} from 'firebase/auth';
 
 const Home = () => {
   
@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     borderRadius: 25,
+    backgroundColor:"#009E87",
   },
   button: {
     width: '100%',
