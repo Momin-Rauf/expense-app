@@ -7,7 +7,7 @@ import { auth } from '../index'; // Assuming auth and signOut are exported from 
 import { getAuth ,signOut} from 'firebase/auth';
 
 const Dashboard = () => {
-  const db = SQLite.openDatabase('Expensetracker.db');
+  const db = SQLite.openDatabase('expenseAPP.db');
   const [categories, setCategories] = useState([]);
   const [bills, setBills] = useState([]);
   const [totalExpense, setTotalExpense] = useState(0);
@@ -33,8 +33,7 @@ const Dashboard = () => {
   
     fetchUserData();
     fetchBills();
-    fetchCategories();
-    fetchTotalExpense();
+   
      // Add this line
   }, []);
 
@@ -66,7 +65,7 @@ const Dashboard = () => {
       tx.executeSql(
         `SELECT Categories.*, 
         (SELECT SUM(amount) FROM Expenses 
-          WHERE Expenses.category_id = Categories.id 
+          WHERE Expenses.category_id = Categories.id and Expenses.user_id = ?
          
         ) as totalExpense,
         (SELECT date FROM Expenses 
@@ -79,6 +78,7 @@ const Dashboard = () => {
         (_, { rows }) => {
           const data = rows._array;
           setCategories(data);
+          console.log(data);
         },
         (_, error) => console.error('Error fetching categories:', error)
       );
@@ -144,6 +144,7 @@ const Dashboard = () => {
       <ScrollView contentContainerStyle={styles.container}>
       <Title style={styles.title}>{email}</Title>
       <Title style={styles.title}>Data </Title>
+      
       <PieChart
             data={categories.map(category => ({
               name: category.name,
@@ -162,6 +163,22 @@ const Dashboard = () => {
             paddingLeft="15"
             absolute
           />
+
+<Button
+  style={[styles.button, { color: 'white' }]}
+  onPress={fetchTotalExpense}
+  labelStyle={{ color: 'white' }}
+>
+  Fetch total expense
+</Button>
+<Button
+  style={[styles.button, { color: 'white' }]}
+  onPress={fetchCategories}
+  labelStyle={{ color: 'white' }}
+>
+  Fetch Financial Status
+</Button>
+
 
         <Title style={styles.title}>Categories</Title>
         <Text style={styles.totalExpenseText}>Total Expense: ${totalExpense}</Text>
@@ -199,6 +216,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  button:{
+     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    backgroundColor: 'blue',
+    color: 'white',
   },
   totalExpenseText: {
     fontSize: 18,

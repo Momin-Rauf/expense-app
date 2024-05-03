@@ -9,7 +9,7 @@ import { auth } from '../index';
 
 
 const Expense = () => {
-  const db = SQLite.openDatabase('Expensetracker.db');
+  const db = SQLite.openDatabase('expenseAPP.db');
   const [categories, setCategories] = useState([]);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [selectedBudgetCategory, setSelectedBudgetCategory] = useState('');
@@ -29,6 +29,7 @@ const Expense = () => {
       setEmail(user.email); // Fetch the current user's email
     }
 
+    console.log(user);
     // Ensure all SQL commands are within db.transaction
     db.transaction((tx) => {
       tx.executeSql(
