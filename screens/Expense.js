@@ -9,7 +9,7 @@ import { auth } from '../index';
 
 
 const Expense = () => {
-  const db = SQLite.openDatabase('expenseAPP.db');
+  const db = SQLite.openDatabase('fire.db');
   const [categories, setCategories] = useState([]);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [selectedBudgetCategory, setSelectedBudgetCategory] = useState('');
@@ -252,6 +252,7 @@ const Expense = () => {
           if (rowsAffected > 0) {
             Alert.alert('Success', 'Budget added successfully');
             setBudgetAmount('');
+            console.log(email,selectedBudgetCategory,budgetAmount);
             setSelectedBudgetCategory('');
           } else {
             Alert.alert('Error', 'Failed to add budget');

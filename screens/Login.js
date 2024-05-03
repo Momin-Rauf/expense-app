@@ -1,7 +1,7 @@
-import React, { useState,useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { signInWithEmailAndPassword} from "firebase/auth";
+import React, { useState,useEffect } from 'react';
 import { auth } from "../index";
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');

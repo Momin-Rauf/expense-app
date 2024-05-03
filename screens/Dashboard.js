@@ -1,15 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
+import { StyleSheet, ScrollView, View, FlatList, Alert } from 'react-native';
 import { Card, Text, Title, Provider as PaperProvider, Button, Modal, Portal } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
 import { PieChart } from 'react-native-chart-kit';
-import { LineChart } from 'react-native-chart-kit';
-
 import { auth } from '../index'; // Assuming auth and signOut are exported from index.js
-import { getAuth ,signOut} from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
+import { useTranslation, initReactI18next } from 'react-i18next';
+import i18next from 'i18next';
+
+// Initialize i18n with English and Arabic translations
+i18next
+  .use(initReactI18next) // Passes i18n to react-i18next
+  .init({
+    resources: {
+      en: {
+        translation: {
+          "Total Expense": "Total Expense",
+          "Fetch total expense": "Fetch total expense",
+          "Fetch Financial Status": "Fetch Financial Status",
+          "Fetch Bill Reminders": "Fetch Bill Reminders",
+          "Categories": "Categories",
+          "Bill Reminders": "Bill Reminders",
+        },
+      },
+      ar: {
+        translation: {
+          "Total Expense": "إجمالي المصروف",
+          "Fetch total expense": "احصل على إجمالي المصروف",
+          "Fetch Financial Status": "احصل على الحالة المالية",
+          "Fetch Bill Reminders": "احصل على تذكيرات الفواتير",
+          "Categories": "الفئات",
+          "Bill Reminders": "تذكيرات الفواتير",
+        },
+      },
+    },
+    lng: 'en', // Default language
+    fallbackLng: 'en', // Fallback language
+    interpolation: {
+      escapeValue: false, // React Native already prevents XSS
+    },
+  });
 
 const Dashboard = () => {
-  const db = SQLite.openDatabase('expenseAPP.db');
+  const db = SQLite.openDatabase('fire.db');
   const [categories, setCategories] = useState([]);
   const [bills, setBills] = useState([]);
   const [totalExpense, setTotalExpense] = useState(0);
@@ -18,7 +51,7 @@ const Dashboard = () => {
   const [expenses, setExpenses] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
   const [email, setEmail] = useState('');
-
+  const { t, i18n } = useTranslation(); // Get the translation function
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -35,8 +68,7 @@ const Dashboard = () => {
   
     fetchUserData();
     fetchBills();
-   
-     // Add this line
+    // Add this line
   }, []);
 
   const renderBill = ({ item }) => (
@@ -92,7 +124,7 @@ const Dashboard = () => {
     db.transaction(tx => {
       tx.executeSql(
         `SELECT SUM(amount) as total FROM Expenses WHERE user_id = ?;`,
-    [email],
+        [email],
         (_, { rows }) => {
           const { total } = rows._array[0];
           setTotalExpense(total || 0);
@@ -148,59 +180,62 @@ const Dashboard = () => {
     </Card>
   );
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
     <PaperProvider>
       <ScrollView contentContainerStyle={styles.container}>
-      <Title style={styles.title}>{email}</Title>
-      <Title style={styles.title}>Data </Title>
-      
-      <PieChart
-            data={categories.map(category => ({
-              name: category.name,
-              expense: category.totalExpense,
-              color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
-            }))}
-            width={300}
-            height={200}
-            chartConfig={{
-              backgroundColor: '#ffffff',
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            }}
-            accessor="expense"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-          />
-          
+        <Title style={styles.title}>{email}</Title>
+        <Title style={styles.title}>{t("Total Expense")}</Title>
+        
+        <PieChart
+          data={categories.map(category => ({
+            name: category.name,
+            expense: category.totalExpense,
+            color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
+          }))}
+          width={300}
+          height={200}
+          chartConfig={{
+            backgroundColor: '#ffffff',
+            decimalPlaces: 2,
+            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          }}
+          accessor="expense"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          absolute
+        />
+        
+        <Button
+          style={[styles.button, { color: 'white' }]}
+          onPress={fetchTotalExpense}
+          labelStyle={{ color: 'white' }}
+        >
+          {t("Fetch total expense")}
+        </Button>
+        <Button
+          style={[styles.button, { color: 'white' }]}
+          onPress={fetchCategories}
+          labelStyle={{ color: 'white' }}
+        >
+          {t("Fetch Financial Status")}
+        </Button>
+        <Button
+          style={[styles.button, { color: 'white' }]}
+          onPress={fetchBills}
+          labelStyle={{ color: 'white' }}
+        >
+          {t("Fetch Bill Reminders")}
+        </Button>
 
-<Button
-  style={[styles.button, { color: 'white' }]}
-  onPress={fetchTotalExpense}
-  labelStyle={{ color: 'white' }}
->
-  Fetch total expense
-</Button>
-<Button
-  style={[styles.button, { color: 'white' }]}
-  onPress={fetchCategories}
-  labelStyle={{ color: 'white' }}
->
-  Fetch Financial Status
-</Button>
-<Button
-  style={[styles.button, { color: 'white' }]}
-  onPress={fetchBills}
-  labelStyle={{ color: 'white' }}
->
-  Fetch Bill Reminders
-</Button>
-
-        <Title style={styles.title}>Categories</Title>
-        <Text style={styles.totalExpenseText}>Total Expense: ${totalExpense}</Text>
+        <Title style={styles.title}>{t("Categories")}</Title>
+        <Text style={styles.totalExpenseText}>{t("Total Expense")}: ${totalExpense}</Text>
         {categories.map(category => renderCategory(category))}
       </ScrollView>
-      <Title style={styles.title}>Bill Reminders</Title>
+      <Title style={styles.title}>{t("Bill Reminders")}</Title>
       <FlatList
         data={bills}
         keyExtractor={item => item.id.toString()}
@@ -208,7 +243,7 @@ const Dashboard = () => {
       />
       <Portal>
         <Modal visible={isModalVisible} onDismiss={() => setIsModalVisible(false)} contentContainerStyle={styles.modalContainer}>
-          <Title>Expenses in {selectedCategory?.name}</Title>
+          <Title>{t("Expenses in")} {selectedCategory?.name}</Title>
           <FlatList
             data={expenses}
             keyExtractor={item => item.id.toString()}
@@ -233,8 +268,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  button:{
-     fontSize: 18,
+  button: {
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
     backgroundColor: 'blue',
@@ -259,6 +294,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   expenseCard: {
+    marginBottom: 10,
+  },
+  billCard: {
     marginBottom: 10,
   },
 });
