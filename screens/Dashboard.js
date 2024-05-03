@@ -3,6 +3,8 @@ import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
 import { Card, Text, Title, Provider as PaperProvider, Button, Modal, Portal } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
 import { PieChart } from 'react-native-chart-kit';
+import { LineChart } from 'react-native-chart-kit';
+
 import { auth } from '../index'; // Assuming auth and signOut are exported from index.js
 import { getAuth ,signOut} from 'firebase/auth';
 
@@ -119,16 +121,23 @@ const Dashboard = () => {
     setIsModalVisible(true);
   };
 
-  const renderExpense = ({ item }) => (
-    <Card style={styles.expenseCard}>
-      <Card.Content>
-        <Text>Date: {item.date}</Text>
-        <Text>Amount: ${item.amount}</Text>
-        <Text>Description: {item.description}</Text>
-      </Card.Content>
-    </Card>
-  );
-
+  const renderExpense = ({ item }) => {
+    // Convert the date string to a JavaScript Date object
+    const expenseDate = new Date(item.date);
+    // Format the date as desired (e.g., "MMM DD, YYYY")
+    const formattedDate = expenseDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  
+    return (
+      <Card style={styles.expenseCard}>
+        <Card.Content>
+          <Text>Date: {formattedDate}</Text>
+          <Text>Amount: ${item.amount}</Text>
+          <Text>Description: {item.description}</Text>
+        </Card.Content>
+      </Card>
+    );
+  };
+  
   const renderCategory = (category) => (
     <Card key={category.id} style={styles.categoryCard} onPress={() => onCategoryClick(category)}>
       <Card.Content>
@@ -163,6 +172,7 @@ const Dashboard = () => {
             paddingLeft="15"
             absolute
           />
+          
 
 <Button
   style={[styles.button, { color: 'white' }]}
@@ -178,7 +188,13 @@ const Dashboard = () => {
 >
   Fetch Financial Status
 </Button>
-
+<Button
+  style={[styles.button, { color: 'white' }]}
+  onPress={fetchBills}
+  labelStyle={{ color: 'white' }}
+>
+  Fetch Bill Reminders
+</Button>
 
         <Title style={styles.title}>Categories</Title>
         <Text style={styles.totalExpenseText}>Total Expense: ${totalExpense}</Text>
